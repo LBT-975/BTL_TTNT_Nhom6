@@ -24,9 +24,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # ============================================================================
-# CẤU HÌNH ĐƯỜNG DẪN - THAY ĐỔI THEO MÔI TRƯỜNG KAGGLE CỦA BẠN
-# ============================================================================
-DATA_PATH = '/kaggle/input/datasets/phamthao123/data-ttnt/data.csv'   
+DATA_PATH = '/kaggle/input/datasets/data.csv'   
 OUTPUT_PATH = 'cleaned_data.csv'
 
 USE_STOPWORDS = False
