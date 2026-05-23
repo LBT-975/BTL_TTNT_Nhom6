@@ -1,0 +1,110 @@
+import pandas as pd
+import re
+import unicodedata
+
+# ==================== CẤU HÌNH ====================
+DATA_PATH = '/kaggle/input/datasets/phamthao123/dataaaa/data.csv'
+OUTPUT_PATH = 'cleaned_data.csv'
+
+TEENCODE_MAP = {
+    # Phổ biến nhất
+    'ko': 'không', 'k': 'không', 'khong': 'không',
+    'dc': 'được', 'dk': 'được', 'đc': 'được',
+    'j': 'gì', 'gi': 'gì', 'gj': 'gì',
+    'z': 'vậy', 'w': 'quá', 'wa': 'quá', 'qá': 'quá',
+    'r': 'rồi', 'vs': 'với', 'v': 'vậy',
+    'lun': 'luôn', 'luon': 'luôn',
+    'ship': 'giao hàng', 'shop': 'cửa hàng', 'sp': 'sản phẩm',
+    # Thêm một số từ hay gặp
+    'thik': 'thích', 'thix': 'thích', 'ưng': 'thích',
+    'xau': 'xấu', 'tot': 'tốt', 'dep': 'đẹp',
+    'thanks': 'cảm ơn', 'thank': 'cảm ơn', 'tks': 'cảm ơn',
+}
+
+def simple_clean(text):
+    """Hàm làm sạch đơn giản nhưng chính xác"""
+    if not isinstance(text, str):
+        return ""
+    
+    # 1. Chuẩn hóa Unicode
+    text = unicodedata.normalize('NFC', text)
+    
+    # 2. Chuyển về chữ thường
+    text = text.lower()
+    
+    # 3. THAY THẾ TEENCODE (quan trọng: thay thế toàn bộ từ, không phải một phần)
+    # Tách thành các từ riêng biệt
+    words = text.split()
+    new_words = []
+    for word in words:
+        # Thay thế nếu từ nằm trong từ điển
+        if word in TEENCODE_MAP:
+            new_words.append(TEENCODE_MAP[word])
+        else:
+            new_words.append(word)
+    text = ' '.join(new_words)
+    
+    # 4. Chỉ xóa các ký tự lặp quá nhiều (từ 4 lần trở lên)
+    text = re.sub(r'([a-zà-ỳđ])\1{3,}', r'\1\1', text)  # Giữ tối đa 2 lần
+    
+    # 5. Xóa dấu câu thừa (giữ lại dấu cách và chữ cái)
+    # KHÔNG xóa dấu cách, KHÔNG xóa số (vì có thể có "5 sao", "10 điểm")
+    text = re.sub(r'[^\w\sàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]', ' ', text)
+    
+    # 6. Xóa khoảng trắng thừa
+    text = re.sub(r'\s+', ' ', text).strip()
+    
+    return text
+
+# ==================== THỰC THI ====================
+print("="*60)
+print("TIỀN XỬ LÝ DỮ LIỆU (ĐƠN GIẢN & CHÍNH XÁC)")
+print("="*60)
+
+# 1. Đọc dữ liệu
+print("\n[1/3] Đang đọc file...")
+df = pd.read_csv(DATA_PATH, encoding='utf-8')
+print(f"   ✅ Đọc thành công {len(df):,} dòng")
+
+# 2. Kiểm tra dữ liệu gốc
+print("\n[2/3] Mẫu dữ liệu GỐC:")
+for i in range(3):
+    print(f"   {i+1}. {df.iloc[i]['content'][:100]}... -> {df.iloc[i]['label']}")
+
+# 3. Áp dụng làm sạch
+print("\n[3/3] Đang làm sạch dữ liệu...")
+df['cleaned_comment'] = df['content'].apply(simple_clean)
+
+# 4. Kiểm tra kết quả
+print("\n" + "="*60)
+print("MẪU DỮ LIỆU SAU KHI LÀM SẠCH:")
+print("="*60)
+
+# Lấy 10 mẫu ngẫu nhiên
+sample_df = df.sample(min(10, len(df)))
+for idx, row in sample_df.iterrows():
+    print(f"\n--- Original ---")
+    print(f"{row['content'][:150]}")
+    print(f"Label: {row['label']}")
+    print(f"\n--- Cleaned ---")
+    print(f"{row['cleaned_comment'][:150]}")
+    print("-"*50)
+
+# 5. Lưu file
+df[['content', 'label', 'cleaned_comment']].to_csv(OUTPUT_PATH, index=False, encoding='utf-8-sig')
+print(f"\n✅ Đã lưu file: {OUTPUT_PATH}")
+
+# 6. Thống kê nhanh
+print("\n" + "="*60)
+print("THỐNG KÊ NHANH")
+print("="*60)
+print(f"Số dòng: {len(df):,}")
+print(f"Phân phối nhãn:")
+print(df['label'].value_counts())
+
+# Kiểm tra độ dài trung bình
+df['original_len'] = df['content'].str.len()
+df['cleaned_len'] = df['cleaned_comment'].str.len()
+print(f"\nĐộ dài trung bình:")
+print(f"  Original: {df['original_len'].mean():.0f} ký tự")
+print(f"  Cleaned : {df['cleaned_len'].mean():.0f} ký tự")
