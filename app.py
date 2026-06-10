@@ -202,7 +202,7 @@ negative_keywords = list(set([
     "khong giong hinh", "hang gia", "lua dao", "chan", "bo tay",
     "khong thich", "san pham bi loi", "hang bi hu", "giao sai hang",
     "giao thieu hang", "phuc vu te", "dich vu te", "thai do te", "te",
-    "kha te", "chat luong te", "chat luong kha te"
+    "kha te", "chat luong te", "chat luong kha te", "khong tot"
 ]))
 
 positive_keywords = list(set([
